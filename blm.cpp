@@ -17,7 +17,7 @@ struct Instancia
         n = static_cast<int>(std::pow(m, paramR)); // pow arredonda pra baixo
     }
     
-    void tarefaRandom( mt19937& gen ) {
+    void tarefaRandom( mt19937& gen ) { // gera novos valores para todas as tarefas
         uniform_int_distribution<> tempo (1,100);
 
         tarefas.resize(n);
@@ -39,17 +39,33 @@ struct Solucao {
         makespan = 0;
     }
 
-    void solucaoInicial ( mt19937& gen, Instancia inst ) { // distribuição aleatória inicial das tarefas para as máquinas
-        uniform_int_distribution<> maq(0, inst.m - 1);
+    void estadoInicial ( Instancia& inst ) { // distribuição inicial das tarefas para a primeira máquina
+        for (int i = 0; i < inst.n; i++) {;
+            maquinas[0].push_back(i);
+            carga[0] += inst.tarefas[i];
+        }
+        makespan = carga[0];
+        //makespan = *max_element(carga.begin(), carga.end());
+    }
 
-        for (int i = 0; i < inst.n; i++) {
-            int destino = maq(gen);
+    void iterarPrimeiraMelhora ( Instancia& inst ) {
+        int indexMakespan = distance( carga.begin(), max_element( carga.begin(), carga.end() ) ); // verificar qual maquina tem o makespan
 
-            maquinas[destino].push_back(i);
-            carga[destino] += inst.tarefas[i];
+        for (int i = indexMakespan+1; i < inst.m; i++) {                                    // procura a primeira melhora pelos vizinhos
+            int novoMakespan = carga[i] + inst.tarefas[ maquinas[indexMakespan].back() ];   // simular passar a ultima tarefa para vizinho
+            if( novoMakespan < makespan ) {                                                 // se reduz o makespan, executa a mudança
+                maquinas[i].push_back( maquinas[indexMakespan].back() );                    // copia a tarefa para o vizinho
+                carga[indexMakespan] -= inst.tarefas[ maquinas[indexMakespan].back() ];
+                makespan = carga[indexMakespan];
+                carga[i] += inst.tarefas[ maquinas[indexMakespan].back() ];
+                maquinas[indexMakespan].pop_back();                                         // deleta a tarefa da pilha original
+                
+                iterarPrimeiraMelhora(inst);
+                break;
+            }
         }
 
-        makespan = *max_element(carga.begin(), carga.end());
+        // se o makespan fica igual ou piora, encerrar
     }
 };
 
@@ -57,36 +73,50 @@ int main() {
     random_device rd;
     mt19937 gen(rd());
 
-    vector<Instancia> instancias;
+    //vector<Instancia> instancias;
 
     for ( int m : {10, 20, 50} ) {
-        for ( float r : {1.5, 2.0} ) {
-            instancias.push_back( Instancia(m, r) );
+        for ( float r : {1.5, 2.0} ) {            
+            //instancias.push_back( Instancia(m, r) );
+            Instancia inst(m, r);
+            inst.tarefaRandom( gen );
+
+            Solucao sol(inst.m);
+
+            sol.estadoInicial(inst);
+
+            sol.iterarPrimeiraMelhora(inst);
+
+            // for ( int y=0; y < sol.maquinas.size(); y++ ) {
+            //     cout << "maquina " << y << ":\n";
+            //     cout << "carga " << sol.carga[y] << "\n";
+            //     cout << endl;
+            // }
         }
     }
 
-    cout << "m = " << instancias[0].m << endl;
-    cout << "n = " << instancias[0].n << endl;
+    // cout << "m = " << instancias[0].m << endl;
+    // cout << "n = " << instancias[0].n << endl;
 
-    instancias[0].tarefaRandom( gen );
+    // instancias[0].tarefaRandom( gen );
 
-    for ( int x : instancias[0].tarefas ) {
-        cout << x << endl;
-    }
+    // for ( int x : instancias[0].tarefas ) {
+    //     cout << x << endl;
+    // }
 
-    Solucao sol(instancias[0].m);
+    // Solucao sol(instancias[0].m);
 
-    sol.solucaoInicial(gen, instancias[0]);
+    // sol.estadoInicial(instancias[0]);
 
-    int i = 0;
-    for ( vector<int> y : sol.maquinas ) {
-        cout << "maquina " << i << ":\n";
-        for ( int x : y ) {
-            cout << x << endl;
-        }
-        cout << endl;
-        i++;
-    }
+    // int i = 0;
+    // for ( vector<int> y : sol.maquinas ) {
+    //     cout << "maquina " << i << ":\n";
+    //     for ( int x : y ) {
+    //         cout << instancias[0].tarefas[x] << endl;
+    //     }
+    //     cout << endl;
+    //     i++;
+    // }
 
     return 0;
 }
