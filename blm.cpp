@@ -4,6 +4,8 @@
 #include <random>
 #include <ctime>
 #include <math.h> 
+#include <fstream>
+#include <chrono>
 using namespace std;
 
 struct Instancia
@@ -32,11 +34,13 @@ struct Solucao {
     vector<vector<int>> maquinas; // cada máquina guarda os índices das tarefas
     vector<int> carga;            // carga de cada máquina
     int makespan;
+    int iteracoes;
 
     Solucao(int m) {
         maquinas.resize(m);
         carga.assign(m, 0);
         makespan = 0;
+        iteracoes = 0;
     }
 
     void estadoInicial ( Instancia& inst ) { // distribuição inicial das tarefas para a primeira máquina
@@ -45,7 +49,6 @@ struct Solucao {
             carga[0] += inst.tarefas[i];
         }
         makespan = carga[0];
-        //makespan = *max_element(carga.begin(), carga.end());
     }
 
     void iterarPrimeiraMelhora ( Instancia& inst ) {
@@ -61,6 +64,7 @@ struct Solucao {
                 maquinas[indexMakespan].pop_back();                                         // deleta a tarefa da pilha original
                 
                 iterarPrimeiraMelhora(inst);
+                iteracoes++;
                 break;
             }
         }
@@ -73,50 +77,58 @@ int main() {
     random_device rd;
     mt19937 gen(rd());
 
-    //vector<Instancia> instancias;
-
+    ofstream arqResult ("results.txt");
+    if ( arqResult.is_open() ){
+        arqResult << "heuristica,n,m,replicacao,tempo,iteracoes,valor,parametro\n";
+        arqResult.close();
+    } else {
+        cout << "Erro ao abrir arquivo txt\n";
+        return 0;
+    }
+    
+    
+    int replicacao = 1;
     for ( int m : {10, 20, 50} ) {
         for ( float r : {1.5, 2.0} ) {            
-            //instancias.push_back( Instancia(m, r) );
             Instancia inst(m, r);
+
+            for ( int i = 0; i < 10; i++ ) {
+            
             inst.tarefaRandom( gen );
 
             Solucao sol(inst.m);
-
             sol.estadoInicial(inst);
 
+            auto inicio = std::chrono::high_resolution_clock::now();
+
             sol.iterarPrimeiraMelhora(inst);
+
+            auto fim = std::chrono::high_resolution_clock::now();
+            double tempo = std::chrono::duration<double, milli>(fim - inicio).count();
+
+            arqResult.open("results.txt", fstream::app); // fstream::app - modo em que o arquivo é aberto(app = append)
+            if ( arqResult.is_open() ){
+                //              heuristica,n,m,replicacao,tempo,iteracoes,valor(makespan),parametro
+                arqResult << "Monotona - Primeira Melhora," << inst.n << "," << inst.m << "," << i+1 << "," << tempo << "ms," << sol.iteracoes << "," << sol.makespan << ",NA\n";
+                arqResult.close();
+            } else {
+                cout << "Erro ao abrir arquivo txt\n";
+                return 0;
+            }
+
+            replicacao++;
 
             // for ( int y=0; y < sol.maquinas.size(); y++ ) {
             //     cout << "maquina " << y << ":\n";
             //     cout << "carga " << sol.carga[y] << "\n";
             //     cout << endl;
             // }
+
+
+            }
+            
         }
     }
-
-    // cout << "m = " << instancias[0].m << endl;
-    // cout << "n = " << instancias[0].n << endl;
-
-    // instancias[0].tarefaRandom( gen );
-
-    // for ( int x : instancias[0].tarefas ) {
-    //     cout << x << endl;
-    // }
-
-    // Solucao sol(instancias[0].m);
-
-    // sol.estadoInicial(instancias[0]);
-
-    // int i = 0;
-    // for ( vector<int> y : sol.maquinas ) {
-    //     cout << "maquina " << i << ":\n";
-    //     for ( int x : y ) {
-    //         cout << instancias[0].tarefas[x] << endl;
-    //     }
-    //     cout << endl;
-    //     i++;
-    // }
 
     return 0;
 }
