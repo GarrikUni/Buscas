@@ -59,9 +59,10 @@ struct Solucao {
                 if( novoMakespan < makespan ) {                                                 // se reduz o makespan, executa a mudança
                     maquinas[i].push_back( maquinas[indexMakespan].back() );                    // copia a tarefa para o vizinho
                     carga[indexMakespan] -= inst.tarefas[ maquinas[indexMakespan].back() ];
-                    makespan = carga[indexMakespan];
                     carga[i] += inst.tarefas[ maquinas[indexMakespan].back() ];
-                    maquinas[indexMakespan].pop_back();                                         // deleta a tarefa da pilha original
+                    maquinas[indexMakespan].pop_back();   // deleta a tarefa da pilha original
+                    
+                    makespan = *max_element( carga.begin(), carga.end() );
                     
                     iterarPrimeiraMelhora(inst);
                     iteracoes++;
@@ -82,8 +83,8 @@ struct Solucao {
             origem = tarefas( gen );
             do {
                 destino = tarefas( gen );
-            } while (origem == destino)
-            destino = tarefas( gen );
+            } while (origem == destino);
+            
             maquinas[destino].push_back( maquinas[origem].back() );
             carga[destino] += inst.tarefas[ maquinas[origem].back() ];
             carga[origem] -= inst.tarefas[ maquinas[origem].back() ];

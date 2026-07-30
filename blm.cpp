@@ -8,8 +8,7 @@
 #include <chrono>
 using namespace std;
 
-struct Instancia
-{
+struct Instancia {
     int m;                  // número de máquinas
     int n;                  // número de tarefas
     vector<int> tarefas;    // tempo de cada tarefa
@@ -59,10 +58,11 @@ struct Solucao {
             if( novoMakespan < makespan ) {                                                 // se reduz o makespan, executa a mudança
                 maquinas[i].push_back( maquinas[indexMakespan].back() );                    // copia a tarefa para o vizinho
                 carga[indexMakespan] -= inst.tarefas[ maquinas[indexMakespan].back() ];
-                makespan = carga[indexMakespan];
                 carga[i] += inst.tarefas[ maquinas[indexMakespan].back() ];
                 maquinas[indexMakespan].pop_back();                                         // deleta a tarefa da pilha original
                 
+                makespan = *max_element( carga.begin(), carga.end() );
+
                 iterarPrimeiraMelhora(inst);
                 iteracoes++;
                 break;
@@ -94,37 +94,42 @@ int main() {
 
             for ( int i = 0; i < 10; i++ ) {
             
-            inst.tarefaRandom( gen );
+                inst.tarefaRandom( gen );
 
-            Solucao sol(inst.m);
-            sol.estadoInicial(inst);
+                Solucao sol(inst.m);
+                sol.estadoInicial(inst);
 
-            auto inicio = std::chrono::high_resolution_clock::now();
+                auto inicio = std::chrono::high_resolution_clock::now();
 
-            sol.iterarPrimeiraMelhora(inst);
+                sol.iterarPrimeiraMelhora(inst);
 
-            auto fim = std::chrono::high_resolution_clock::now();
-            double tempo = std::chrono::duration<double, milli>(fim - inicio).count();
+                auto fim = std::chrono::high_resolution_clock::now();
+                double tempo = std::chrono::duration<double, milli>(fim - inicio).count();
 
-            arqResult.open("results.txt", fstream::app); // fstream::app - modo em que o arquivo é aberto(app = append)
-            if ( arqResult.is_open() ){
-                //              heuristica,n,m,replicacao,tempo,iteracoes,valor(makespan),parametro
-                arqResult << "Monotona - Primeira Melhora," << inst.n << "," << inst.m << "," << i+1 << "," << tempo << "ms," << sol.iteracoes << "," << sol.makespan << ",NA\n";
-                arqResult.close();
-            } else {
-                cout << "Erro ao abrir arquivo txt\n";
-                return 0;
-            }
+                arqResult.open("results.txt", fstream::app); // fstream::app - modo em que o arquivo é aberto(app = append)
+                if ( arqResult.is_open() ){
+                    //              heuristica,n,m,replicacao,tempo,iteracoes,valor(makespan),parametro
+                    arqResult << "Monotona - Primeira Melhora," << inst.n << "," << inst.m << "," << i+1 << "," << tempo << "ms," << sol.iteracoes << "," << sol.makespan << ",NA\n";
+                    arqResult.close();
+                } else {
+                    cout << "Erro ao abrir arquivo txt\n";
+                    return 0;
+                }
 
-            replicacao++;
+                replicacao++;
 
-            // for ( int y=0; y < sol.maquinas.size(); y++ ) {
-            //     cout << "maquina " << y << ":\n";
-            //     cout << "carga " << sol.carga[y] << "\n";
-            //     cout << endl;
-            // }
-
-
+                if(inst.n == 31) {
+                    int i = 1;
+                    for ( vector<int> y : sol.maquinas ) {
+                        cout << "maquina " << i << ":\n";
+                        for (int x : y){
+                            cout << inst.tarefas[x] << endl;
+                        }
+                        cout << "-------------\n";
+                        i++;
+                    }
+                }
+           
             }
             
         }
