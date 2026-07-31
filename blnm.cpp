@@ -95,51 +95,86 @@ struct Solucao {
             int indexMakespan = distance( carga.begin(), max_element(carga.begin(), carga.end()) );
 
             int indexMelhorDestino = -1;
-            int indexMelhorTarefa = -1;
+            int indexMelhorTarefa = 0;
 
             int melhorMakespan = makespan;
 
-            for (int pos = 0; pos < maquinas[indexMakespan].size(); pos++) { // testa todas as tarefas da máquina crítica
+            int maiorPeso = inst.tarefas[maquinas[indexMakespan][0]];
+            for (int pos = 1; pos < maquinas[indexMakespan].size(); pos++) {
                 int tarefa = maquinas[indexMakespan][pos];
-                int peso = inst.tarefas[tarefa];
-
-                for (int i = 0; i < inst.m; i++) { // testa todos os destinos
-                    if (i == indexMakespan)
-                        continue;
-
-                    vector<int> cargaSimulada = carga;
-
-                    cargaSimulada[indexMakespan] -= peso;
-                    cargaSimulada[i] += peso;
-
-                    int makespanSimulado = *max_element( cargaSimulada.begin(), cargaSimulada.end() );
-
-                    if ( makespanSimulado < melhorMakespan ) {
-                        melhorMakespan = makespanSimulado;
-                        indexMelhorDestino = i;
-                        indexMelhorTarefa = pos;
-                    }
+                if (inst.tarefas[tarefa] > maiorPeso) {
+                    maiorPeso = inst.tarefas[tarefa];
+                    indexMelhorTarefa = pos;
                 }
             }
-
+            int tarefa = maquinas[indexMakespan][indexMelhorTarefa];
+            int peso = inst.tarefas[tarefa];
+            for (int i = 0; i < inst.m; i++) {
+                if (i == indexMakespan)
+                    continue;
+                vector<int> cargaSimulada = carga;
+                cargaSimulada[indexMakespan] -= peso;
+                cargaSimulada[i] += peso;
+                int makespanSimulado =
+                    *max_element(cargaSimulada.begin(), cargaSimulada.end());
+                if (makespanSimulado < melhorMakespan) {
+                    melhorMakespan = makespanSimulado;
+                    indexMelhorDestino = i;
+                }
+            }
             if (indexMelhorDestino != -1) {
-
-                int tarefa =
-                    maquinas[indexMakespan][indexMelhorTarefa];
-
-                int peso = inst.tarefas[tarefa];
-
                 maquinas[indexMelhorDestino].push_back(tarefa);
-                maquinas[indexMakespan].erase( maquinas[indexMakespan].begin() + indexMelhorTarefa );
-
+                maquinas[indexMakespan].erase(
+                    maquinas[indexMakespan].begin() + indexMelhorTarefa
+                );
                 carga[indexMakespan] -= peso;
                 carga[indexMelhorDestino] += peso;
-
                 makespan = melhorMakespan;
-
                 iteracoes++;
                 melhorou = true;
             }
+
+            // for (int pos = 0; pos < maquinas[indexMakespan].size(); pos++) { // testa todas as tarefas da máquina crítica
+            //     int tarefa = maquinas[indexMakespan][pos];
+            //     int peso = inst.tarefas[tarefa];
+
+            //     for (int i = 0; i < inst.m; i++) { // testa todos os destinos
+            //         if (i == indexMakespan)
+            //             continue;
+
+            //         vector<int> cargaSimulada = carga;
+
+            //         cargaSimulada[indexMakespan] -= peso;
+            //         cargaSimulada[i] += peso;
+
+            //         int makespanSimulado = *max_element( cargaSimulada.begin(), cargaSimulada.end() );
+
+            //         if ( makespanSimulado < melhorMakespan ) {
+            //             melhorMakespan = makespanSimulado;
+            //             indexMelhorDestino = i;
+            //             indexMelhorTarefa = pos;
+            //         }
+            //     }
+            // }
+
+            // if (indexMelhorDestino != -1) {
+
+            //     int tarefa =
+            //         maquinas[indexMakespan][indexMelhorTarefa];
+
+            //     int peso = inst.tarefas[tarefa];
+
+            //     maquinas[indexMelhorDestino].push_back(tarefa);
+            //     maquinas[indexMakespan].erase( maquinas[indexMakespan].begin() + indexMelhorTarefa );
+
+            //     carga[indexMakespan] -= peso;
+            //     carga[indexMelhorDestino] += peso;
+
+            //     makespan = melhorMakespan;
+
+            //     iteracoes++;
+            //     melhorou = true;
+            // }
         }
     }
 
