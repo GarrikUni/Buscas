@@ -238,10 +238,11 @@ int main() {
                     Solucao sol_2 = sol;
                     
                     long long iteracoesTotal = sol.iteracoes;
+                    sol.iteracoes = 0;
                     // cout << sol.makespan << " n="<<inst.n<< " p="<< p<< " i="<< i << endl;
                     do {
                         sol_2.redistribuiAleatorio( gen, inst );
-                        sol_2.iterarPrimeiraMelhora(inst);
+                        //sol_2.iterarPrimeiraMelhora(inst);
                         sol_2.iterarMelhorMelhora( inst );
 
                         iteracoesTotal += sol_2.iteracoes;
@@ -252,12 +253,12 @@ int main() {
                             tentativasSemMelhora = 0;
                         } else {
                             //cout << "sem melhora"<< endl;
-                            //sol_2 = sol;
+                            sol_2 = sol;
                             tentativasSemMelhora++;
                         }
 
                     } while ( tentativasSemMelhora < 1000 );
-                    
+                    // iteracoesTotal = sol_2.iteracoes; // se sol_2 não copia sol ao não ter melhora
 
                     auto fim = std::chrono::high_resolution_clock::now();
                     double tempo = std::chrono::duration<double, milli>(fim - inicio).count();
@@ -265,7 +266,7 @@ int main() {
                     arqResult.open("results2.txt", fstream::app); // fstream::app - modo em que o arquivo é aberto(app = append)
                     if ( arqResult.is_open() ){
                         //              heuristica,n,m,replicacao,tempo,iteracoes,valor(makespan),parametro
-                        arqResult << "BLNM - Busca Local Iterada," << inst.n << "," << inst.m << "," << i+1 << "," << tempo << "ms," << iteracoesTotal << "," << sol.makespan << ","<< inst.p <<"\n";
+                        arqResult << "BLNM - Busca Local Iterada,\t" << inst.n << ",\t" << inst.m << ",\t" << i+1 << ",\t" << tempo << "ms,\t" << iteracoesTotal << ",\t" << sol.makespan << ",\t"<< inst.p <<"\n";
                         arqResult.close();
                     } else {
                         cout << "Erro ao abrir arquivo txt\n";
