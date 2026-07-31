@@ -51,25 +51,56 @@ struct Solucao {
     }
 
     void iterarPrimeiraMelhora ( Instancia& inst ) {
-        int indexMakespan = distance( carga.begin(), max_element( carga.begin(), carga.end() ) ); // verificar qual maquina tem o makespan
+        // int indexMakespan = distance( carga.begin(), max_element( carga.begin(), carga.end() ) ); // verificar qual maquina tem o makespan
 
-        for (int i = indexMakespan+1; i < inst.m; i++) {                                    // procura a primeira melhora pelos vizinhos
-            int novoMakespan = carga[i] + inst.tarefas[ maquinas[indexMakespan].back() ];   // simular passar a ultima tarefa para vizinho
-            if( novoMakespan < makespan ) {                                                 // se reduz o makespan, executa a mudança
-                maquinas[i].push_back( maquinas[indexMakespan].back() );                    // copia a tarefa para o vizinho
-                carga[indexMakespan] -= inst.tarefas[ maquinas[indexMakespan].back() ];
-                carga[i] += inst.tarefas[ maquinas[indexMakespan].back() ];
-                maquinas[indexMakespan].pop_back();                                         // deleta a tarefa da pilha original
+        // for (int i = indexMakespan+1; i < inst.m; i++) {                                    // procura a primeira melhora pelos vizinhos
+        //     int novoMakespan = carga[i] + inst.tarefas[ maquinas[indexMakespan].back() ];   // simular passar a ultima tarefa para vizinho
+        //     if( novoMakespan < makespan ) {                                                 // se reduz o makespan, executa a mudança
+        //         maquinas[i].push_back( maquinas[indexMakespan].back() );                    // copia a tarefa para o vizinho
+        //         carga[indexMakespan] -= inst.tarefas[ maquinas[indexMakespan].back() ];
+        //         carga[i] += inst.tarefas[ maquinas[indexMakespan].back() ];
+        //         maquinas[indexMakespan].pop_back();                                         // deleta a tarefa da pilha original
                 
-                makespan = *max_element( carga.begin(), carga.end() );
+        //         makespan = *max_element( carga.begin(), carga.end() );
 
-                iterarPrimeiraMelhora(inst);
-                iteracoes++;
-                break;
+        //         iterarPrimeiraMelhora(inst);
+        //         iteracoes++;
+        //         break;
+        //     }
+        // }        // se o makespan fica igual ou piora, encerrar
+        // A SOLUÇÃO RECURSIVA ACABA CRASHANDO EM M=50 R=2
+        
+        bool melhorou = true;
+
+        while (melhorou) {
+            melhorou = false;
+
+            int indexMakespan = distance( carga.begin(), max_element(carga.begin(), carga.end()) );
+
+            for (int i = indexMakespan + 1; i < inst.m; i++) {
+
+                if (maquinas[indexMakespan].empty())
+                    break;
+
+                int tarefa = maquinas[indexMakespan].back();
+                int novoMakespan = carga[i] + inst.tarefas[tarefa];
+
+                if ( novoMakespan < makespan ) {
+
+                    maquinas[i].push_back(tarefa);
+                    maquinas[indexMakespan].pop_back();
+
+                    carga[indexMakespan] -= inst.tarefas[tarefa];
+                    carga[i] += inst.tarefas[tarefa];
+
+                    makespan = *max_element(carga.begin(), carga.end());
+
+                    iteracoes++;
+                    melhorou = true;
+                    break;
+                }
             }
         }
-
-        // se o makespan fica igual ou piora, encerrar
     }
 };
 
@@ -87,13 +118,12 @@ int main() {
     }
     
     
-    int replicacao = 1;
     for ( int m : {10, 20, 50} ) {
         for ( float r : {1.5, 2.0} ) {            
             Instancia inst(m, r);
 
             for ( int i = 0; i < 10; i++ ) {
-            
+                
                 inst.tarefaRandom( gen );
 
                 Solucao sol(inst.m);
@@ -115,8 +145,6 @@ int main() {
                     cout << "Erro ao abrir arquivo txt\n";
                     return 0;
                 }
-
-                replicacao++;
 
                 if(inst.n == 31) {
                     int i = 1;
